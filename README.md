@@ -16,20 +16,80 @@ A Python automation tool for managing Marktplaats accounts with large numbers of
 
 - Python 3.x
 - Google Chrome browser
-- ChromeDriver (compatible with your Chrome version)
+  - ChromeDriver is automatically managed by Selenium (no manual installation needed)
 
-## Required Python Libraries
+## Installation
+
+### 1. Create a Virtual Environment (Recommended)
+
+It's recommended to use a virtual environment to isolate project dependencies:
+
+**Windows:**
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+**Linux/Mac:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Install Dependencies
+
+Install the required Python libraries:
 
 ```bash
-pip install selenium pillow
+pip install -r requirements.txt
 ```
+
+### 3. Configure Settings
+
+Copy the example configuration file and edit it with your settings:
+
+```bash
+cp config.example.py config.py
+```
+
+Edit `config.py` and set:
+- **EMAIL**: Your Marktplaats login email
+- **PASSWORD**: Your Marktplaats password
+- **CHROME_USER_DATA_DIR**: Path to Chrome profile (use separate automation profile recommended)
+- **BROWSER_COOKIES** (optional): For category scraper API access
+
+#### How to Get Browser Cookies (for scrape_categories.py)
+
+The category scraper needs browser cookies to access the Marktplaats API:
+
+1. Open Chrome and log in to Marktplaats
+2. Press `F12` to open DevTools
+3. Go to **Application** tab
+4. In the left sidebar, expand **Cookies** and click **https://www.marktplaats.nl**
+5. Look for the **Cookie** value (or copy individual cookies)
+6. Right-click on any cookie row > **Show Cookies** or manually copy all cookie values
+7. Format as: `cookie1=value1; cookie2=value2; cookie3=value3`
+8. Paste the entire string into `config.py` as `BROWSER_COOKIES`
+
+**Alternative method:**
+1. In DevTools, go to **Network** tab
+2. Refresh the page or navigate to any Marktplaats page
+3. Click on any request to marktplaats.nl
+4. In **Headers** section, find **Request Headers**
+5. Copy the entire **Cookie:** header value
+6. Paste into `config.py` as `BROWSER_COOKIES`
 
 ## Project Structure
 
 ```
 marktplaats-manager/
 ├── automation.py           # Main automation script
+├── requirements.txt        # Python dependencies
+├── config.example.py       # Example configuration file
+├── config.py              # Your configuration (create from example)
+├── .gitignore             # Git ignore file
 ├── README.md              # This file
+├── .venv/                 # Virtual environment (create this)
 ├── Example ad - HP Z600 workstation/
 │   ├── Beschrijving.txt   # Ad description
 │   ├── Categorie.txt      # Category and pricing info
@@ -46,31 +106,44 @@ marktplaats-manager/
 
 ## Setup
 
-### 1. Configure Chrome Profile
+### 1. Activate Virtual Environment
 
-Edit the Chrome user data directory path in `automation.py`:
+Before running the script, make sure to activate your virtual environment:
 
-**For Linux:**
-```python
-ChromeOptions.add_argument("user-data-dir=/home/YOUR_USERNAME/.config/google-chrome")
+**Windows:**
+```bash
+.venv\Scripts\activate
 ```
 
-**For Windows:**
-```python
-ChromeOptions.add_argument("user-data-dir=C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Google\\Chrome\\User Data")
+**Linux/Mac:**
+```bash
+source .venv/bin/activate
 ```
 
-### 2. Add Login Credentials
+### 2. Create Configuration File
 
-In `automation.py`, add your Marktplaats credentials (lines 60-71):
+Copy the example configuration file and edit it with your settings:
 
-```python
-email = 'your_email@example.com'
-password = 'your_password'
+**Windows:**
+```bash
+copy config.example.py config.py
 ```
 
-### 3. Create Ad Folders
+**Linux/Mac:**
+```bash
+cp config.example.py config.py
+```
 
+Then edit `config.py` and set:
+- `EMAIL`: Your Marktplaats email address
+- `PASSWORD`: Your Marktplaats password
+- `CHROME_USER_DATA_DIR`: Path to Chrome profile directory
+  - **Option 1** (existing profile): `r'C:\Users\YOUR_USERNAME\AppData\Local\Google\Chrome\User Data'` - Requires closing Chrome
+  - **Option 2** (separate profile - recommended): `r'C:\git\marktplaats\chrome-profile'` - No need to close Chrome
+- `HEADLESS_MODE`: Set to `True` to run without visible browser (optional)
+
+### 4. Create Ad Folders
+3
 Create a folder structure for each ad in the `advertenties/` directory:
 
 ```
@@ -170,12 +243,7 @@ The script automatically handles image orientation using EXIF data:
 
 ### Headless Mode
 
-To run without opening a browser window, uncomment in `automation.py`:
-
-```python
-ChromeOptions.add_argument("--headless")
-ChromeOptions.add_argument("--window-size=1920,1080")
-```
+To run without opening a browser window, set `HEADLESS_MODE = True` in your `config.py` file.
 
 ### Scheduling
 
@@ -194,6 +262,12 @@ Trigger: Daily at 9:00 AM
 ```
 
 ## Troubleshooting
+
+### Chrome Not Reachable / Session Not Created
+- **Close ALL Chrome windows** before running the script
+- Chrome's user data directory can only be used by one instance at a time
+- Check Task Manager (Windows) / Activity Monitor (Mac) for lingering Chrome processes
+- If Chrome is still running in the background, end the process and try again
 
 ### Login Issues
 - Ensure your Chrome profile path is correct

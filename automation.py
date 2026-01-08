@@ -4,19 +4,31 @@ from selenium.common.exceptions import NoSuchElementException
 import os
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image, ExifTags
-import imghdr
 
+# Import configuration
+try:
+    from config import EMAIL as email, PASSWORD as password, CHROME_USER_DATA_DIR, HEADLESS_MODE, WINDOW_SIZE
+except ImportError:
+    print("Error: config.py not found!")
+    print("Please copy config.example.py to config.py and fill in your settings.")
+    exit(1)
 
-#web = webdriver.Chrome()
+# Setup Chrome WebDriver
 ChromeOptions = webdriver.ChromeOptions()
-ChromeOptions.add_argument("user-data-dir=/home/wieb/.config/google-chrome")
-#ChromeOptions.add_argument("user-data-dir=C:\\Users\\Wieb\\AppData\\Local\\Google\\Chrome\\User Data")
+ChromeOptions.add_argument(f"user-data-dir={CHROME_USER_DATA_DIR}")
+ChromeOptions.add_argument("--profile-directory=Default")  # Use default profile
 ChromeOptions.add_argument("disable-blink-features=AutomationControlled")
 ChromeOptions.add_argument("--ignore-certificate-errors")
 ChromeOptions.add_argument('--allow-running-insecure-content')
-#ChromeOptions.add_argument("--headless")
-#ChromeOptions.add_argument("--window-size=1920,1080")
+ChromeOptions.add_argument("--no-sandbox")  # Bypass OS security model
+ChromeOptions.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+ChromeOptions.add_argument("--remote-debugging-port=9222")  # Enable DevTools
+if HEADLESS_MODE:
+    ChromeOptions.add_argument("--headless")
+    ChromeOptions.add_argument(f"--window-size={WINDOW_SIZE}")
 WebDriver = webdriver.Chrome(options = ChromeOptions)
 time.sleep(2)
 
@@ -33,11 +45,28 @@ time.sleep(2)
 WebDriver.get('https://www.marktplaats.nl')
 time.sleep(3)
 
-cookies = '//*[@id="gdpr-consent-banner-accept-button"]'
-if check_exists_by_xpath(cookies) != False:
-    cookies = WebDriver.find_element(By.XPATH, '//*[@id="gdpr-consent-banner-accept-button"]')
-    cookies.click()
-    time.sleep(5)
+# Handle cookie consent - it's inside an iframe
+try:
+    wait = WebDriverWait(WebDriver, 10)
+    # Wait for the iframe to appear
+    iframe = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[title*='Consent']")))
+    WebDriver.switch_to.frame(iframe)
+    print("Switched to consent iframe")
+    
+    # Now click the accept button inside the iframe
+    accept_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accepteren') or contains(text(), 'Accept')]")))
+    accept_button.click()
+    print("Cookie consent accepted")
+    
+    # Switch back to main content
+    WebDriver.switch_to.default_content()
+    time.sleep(3)
+except Exception as e:
+    print(f"No cookie consent found or already accepted: {e}")
+    WebDriver.switch_to.default_content()
+
+# Wait for any overlays to disappear
+time.sleep(3)
 
 inloggen_popup = '/html/body/div[4]/div/div/div[1]/div[1]/button'
 if check_exists_by_xpath(inloggen_popup) != False:
@@ -49,33 +78,49 @@ naam_zwm = '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[3]/div/butt
 naam_mwm = '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/div/button/span'
 
 if check_exists_by_xpath(naam_zwm) != True and check_exists_by_xpath(naam_mwm) != True:
-    inloggen_header = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/a')
-    inloggen_header.click()
-    time.sleep(5)
-
-    # email = ''
-    form_email = WebDriver.find_element(By.XPATH, '//*[@id="account-login-form"]/fieldset/div/div[1]/input')
-
-    if form_email != email:
-        form_email.send_keys('')
+    try:
+        # Use JavaScript click to avoid interception
+        inloggen_header = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/a')
+        WebDriver.execute_script("arguments[0].click();", inloggen_header)
+        print("Login button clicked")
+        time.sleep(5)
+    except Exception as e:
+        print(f"Could not click login button: {e}")
         time.sleep(2)
+
+    # Wait for login form to appear
+    try:
+        wait = WebDriverWait(WebDriver, 10)
+        form_email = wait.until(EC.presence_of_element_located((By.ID, 'email')))
+        
+        form_email.clear()
         form_email.send_keys(email)
-    
-    time.sleep(2)
-
-    # password = ''
-    form_password = WebDriver.find_element(By.XPATH, '//*[@id="password"]')
-
-    if form_password != password:
-        form_password.send_keys('')
+        print("Email entered")
         time.sleep(2)
-        form_password.send_keys(password)
-    
-    time.sleep(2)    
 
-    inloggen_submit = WebDriver.find_element(By.XPATH, '//*[@id="account-login-button"]')
-    inloggen_submit.click()
-    time.sleep(5)
+        form_password = WebDriver.find_element(By.ID, 'password')
+        form_password.clear()
+        form_password.send_keys(password)
+        print("Password entered")
+        time.sleep(2)    
+
+        # Find and click the login button
+        try:
+            inloggen_submit = WebDriver.find_element(By.XPATH, "//button[contains(text(), 'Inloggen met je e-mailadres')]")
+            inloggen_submit.click()
+            print("Login submitted")
+            time.sleep(5)
+        except:
+            # Alternative: press Enter on password field
+            form_password.send_keys('\n')
+            print("Login submitted via Enter key")
+            time.sleep(5)
+        
+    except Exception as e:
+        print(f"Login form not found or already logged in: {e}")
+
+# Wait for login to complete and page to load
+time.sleep(3)
 
 if check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[3]/div/button') != False:
     naam_dropdown = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[3]/div/button')
@@ -84,13 +129,17 @@ if check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/
     mijn_advertenties = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[3]/div/ul/li[1]/a')
     mijn_advertenties.click()
     time.sleep(2)
-else:
+elif check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/div/button') != False:
     naam_dropdown = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/div/button')
     naam_dropdown.click()
     time.sleep(1)
     mijn_advertenties = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/div/ul/li[1]/a')
     mijn_advertenties.click()
     time.sleep(2)
+else:
+    print("Could not find account dropdown - might not be logged in")
+    WebDriver.close()
+    exit(1)
 
 meer_advertenties = '//*[@id="load-more-row"]/div/a'
 
@@ -142,24 +191,30 @@ for i in advertenties_niet_op_marktplaats:
         plaats_advertentie.click()
         time.sleep(3)
 
-    input_advertentienaam = WebDriver.find_element(By.XPATH, '//*[@id="category-keywords"]')
+    # Wait for the ad creation page to load
+    wait = WebDriverWait(WebDriver, 10)
+    input_advertentienaam = wait.until(EC.presence_of_element_located((By.ID, 'TextField-vulEenTitelIn')))
     input_advertentienaam.send_keys(i)
+    print(f"Ad title entered: {i}")
     time.sleep(2)
 
     f = open(f'advertenties/{i}/Categorie.txt', 'r')
     file_contents = f.read()
     file_contents = file_contents.split("--")
 
-    eerste_select = Select(WebDriver.find_element(By.XPATH, '//*[@id="cat_sel_1"]'))
+    eerste_select = Select(WebDriver.find_element(By.ID, 'cat_sel_1'))
     eerste_select.select_by_visible_text(file_contents[0])
+    print(f"Category 1 selected: {file_contents[0]}")
     time.sleep(2)
 
-    tweede_select = Select(WebDriver.find_element(By.XPATH, '//*[@id="cat_sel_2"]'))
+    tweede_select = Select(WebDriver.find_element(By.ID, 'cat_sel_2'))
     tweede_select.select_by_visible_text(file_contents[1])
+    print(f"Category 2 selected: {file_contents[1]}")
     time.sleep(2)
 
-    derde_select = Select(WebDriver.find_element(By.XPATH, '//*[@id="cat_sel_3"]'))
+    derde_select = Select(WebDriver.find_element(By.ID, 'cat_sel_3'))
     derde_select.select_by_visible_text(file_contents[2])
+    print(f"Category 3 selected: {file_contents[2]}")
     time.sleep(2)
 
     submit_advertentienaam = WebDriver.find_element(By.XPATH, '//*[@id="category-selection-submit"]')
@@ -174,7 +229,8 @@ for i in advertenties_niet_op_marktplaats:
     for i in my_photos:
         path = f'{photos_folder}/{i}'
         newphoto = i
-        if imghdr.what(path) != 'png':
+        # Check if image needs rotation (skip PNG files)
+        if not path.lower().endswith('.png'):
             try:
 
                 image = Image.open(path)
