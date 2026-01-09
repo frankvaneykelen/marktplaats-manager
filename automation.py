@@ -190,7 +190,7 @@ while check_exists_by_xpath(meer_advertenties) != False:
     toon_meer_advertenties.click()
     time.sleep(3)
 
-my_list = [d for d in os.listdir('ads') if os.path.isdir(os.path.join('ads', d))]
+my_list = [d for d in os.listdir('ads') if os.path.isdir(os.path.join('ads', d)) and d != '.tmp.driveupload']
 print(f"Found {len(my_list)} ad folders locally")
 
 # Get existing ads from Marktplaats using flexible selector
@@ -218,22 +218,30 @@ else:
 for i in ads_niet_op_marktplaats:
     print(f"\nProcessing: {i}")
 
-    homepage = WebDriver.find_element(By.XPATH, '/html/body/mp-header/div[1]/div[2]/div/a')
-    homepage.click()
-    time.sleep(10)
-
-    if check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[6]/a') != False:
-        plaats_advertentie = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[6]/a')
-        plaats_advertentie.click()
-        time.sleep(3)
-
-    elif check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[5]/a') != False:
-        plaats_advertentie = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[5]/a')
-        plaats_advertentie.click()
-        time.sleep(3)
+    # Navigate to homepage first, then click "Plaats advertentie"
+    try:
+        WebDriver.get('https://www.marktplaats.nl')
+        time.sleep(5)
+        
+        # Try to find and click the "Plaats advertentie" button
+        if check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[6]/a') != False:
+            plaats_advertentie = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[6]/a')
+            plaats_advertentie.click()
+            time.sleep(3)
+        elif check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[5]/a') != False:
+            plaats_advertentie = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[5]/a')
+            plaats_advertentie.click()
+            time.sleep(3)
+        else:
+            # Fallback: navigate directly
+            WebDriver.get('https://www.marktplaats.nl/plaatsen/')
+            time.sleep(5)
+    except Exception as e:
+        print(f"Navigation error: {e}")
+        continue
 
     # Wait for the ad creation page to load
-    wait = WebDriverWait(WebDriver, 10)
+    wait = WebDriverWait(WebDriver, 15)
     input_advertentienaam = wait.until(EC.presence_of_element_located((By.ID, 'TextField-vulEenTitelIn')))
     input_advertentienaam.send_keys(i)
     time.sleep(2)
