@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "name": "Antiek en Kunst",
+    "shortName": "Antiek en Kunst"
+  },
+  {
+    "id": 31,
+    "name": "Audio, Tv en Foto",
+    "shortName": "Audio, Tv en Foto"
+  },
+  {
+    "id": 91,
+    "name": "Auto's",
+    "shortName": "Auto's"
+  },
+  {
+    "id": 2600,
+    "name": "Auto-onderdelen",
+    "shortName": "Auto-onderdelen"
+  },
+  {
+    "id": 48,
+    "name": "Auto diversen",
+    "shortName": "Auto diversen"
+  },
+  {
+    "id": 201,
+    "name": "Boeken",
+    "shortName": "Boeken"
+  },
+  {
+    "id": 289,
+    "name": "Caravans en Kamperen",
+    "shortName": "Caravans en Kamperen"
+  },
+  {
+    "id": 1744,
+    "name": "Cd's en Dvd's",
+    "shortName": "Cd's en Dvd's"
+  },
+  {
+    "id": 322,
+    "name": "Computers en Software",
+    "shortName": "Computers en Software"
+  },
+  {
+    "id": 378,
+    "name": "Contacten en Berichten",
+    "shortName": "Contacten en Berichten"
+  },
+  {
+    "id": 1098,
+    "name": "Diensten en Vakmensen",
+    "shortName": "Diensten en Vakmensen"
+  },
+  {
+    "id": 395,
+    "name": "Dieren en Toebehoren",
+    "shortName": "Dieren en Toebehoren"
+  },
+  {
+    "id": 239,
+    "name": "Doe-het-zelf en Verbouw",
+    "shortName": "Doe-het-zelf en Verbouw"
+  },
+  {
+    "id": 445,
+    "name": "Fietsen en Brommers",
+    "shortName": "Fietsen en Brommers"
+  },
+  {
+    "id": 1099,
+    "name": "Hobby en Vrije tijd",
+    "shortName": "Hobby en Vrije tijd"
+  },
+  {
+    "id": 504,
+    "name": "Huis en Inrichting",
+    "shortName": "Huis en Inrichting"
+  },
+  {
+    "id": 1032,
+    "name": "Huizen en Kamers",
+    "shortName": "Huizen en Kamers"
+  },
+  {
+    "id": 565,
+    "name": "Kinderen en Baby's",
+    "shortName": "Kinderen en Baby's"
+  },
+  {
+    "id": 621,
+    "name": "Kleding | Dames",
+    "shortName": "Kleding | Dames"
+  },
+  {
+    "id": 1776,
+    "name": "Kleding | Heren",
+    "shortName": "Kleding | Heren"
+  },
+  {
+    "id": 678,
+    "name": "Motoren",
+    "shortName": "Motoren"
+  },
+  {
+    "id": 728,
+    "name": "Muziek en Instrumenten",
+    "shortName": "Muziek en Instrumenten"
+  },
+  {
+    "id": 1784,
+    "name": "Postzegels en Munten",
+    "shortName": "Postzegels en Munten"
+  },
+  {
+    "id": 1826,
+    "name": "Sieraden, Tassen en Uiterlijk",
+    "shortName": "Sieraden en Tassen"
+  },
+  {
+    "id": 356,
+    "name": "Spelcomputers en Games",
+    "shortName": "Spelcomputers, Games"
+  },
+  {
+    "id": 784,
+    "name": "Sport en Fitness",
+    "shortName": "Sport en Fitness"
+  },
+  {
+    "id": 820,
+    "name": "Telecommunicatie",
+    "shortName": "Telecommunicatie"
+  },
+  {
+    "id": 1984,
+    "name": "Tickets en Kaartjes",
+    "shortName": "Tickets en Kaartjes"
+  },
+  {
+    "id": 1847,
+    "name": "Tuin en Terras",
+    "shortName": "Tuin en Terras"
+  },
+  {
+    "id": 167,
+    "name": "Vacatures",
+    "shortName": "Vacatures"
+  },
+  {
+    "id": 856,
+    "name": "Vakantie",
+    "shortName": "Vakantie"
+  },
+  {
+    "id": 895,
+    "name": "Verzamelen",
+    "shortName": "Verzamelen"
+  },
+  {
+    "id": 976,
+    "name": "Watersport en Boten",
+    "shortName": "Watersport en Boten"
+  },
+  {
+    "id": 537,
+    "name": "Witgoed en Apparatuur",
+    "shortName": "Witgoed en Apparatuur"
+  },
+  {
+    "id": 1085,
+    "name": "Zakelijke goederen",
+    "shortName": "Zakelijke goederen"
+  },
+  {
+    "id": 428,
+    "name": "Diversen",
+    "shortName": "Diversen"
+  }
+]

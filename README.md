@@ -2,6 +2,8 @@
 
 A Python automation tool for managing Marktplaats accounts with large numbers of ads (300+). This tool automatically checks for expired ads and reposts them using Selenium web automation.
 
+> **⚠️ Important:** Always use valid category paths from [categories/categorieen.txt](categories/categorieen.txt). Do not create custom categories - they must match exactly!
+
 ## Features
 
 - **Automatic Reposting**: Monitors expired ads and automatically reposts them
@@ -16,29 +18,89 @@ A Python automation tool for managing Marktplaats accounts with large numbers of
 
 - Python 3.x
 - Google Chrome browser
-- ChromeDriver (compatible with your Chrome version)
+  - ChromeDriver is automatically managed by Selenium (no manual installation needed)
 
-## Required Python Libraries
+## Installation
+
+### 1. Create a Virtual Environment (Recommended)
+
+It's recommended to use a virtual environment to isolate project dependencies:
+
+**Windows:**
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+**Linux/Mac:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Install Dependencies
+
+Install the required Python libraries:
 
 ```bash
-pip install selenium pillow
+pip install -r requirements.txt
 ```
+
+### 3. Configure Settings
+
+Copy the example configuration file and edit it with your settings:
+
+```bash
+cp config.example.py config.py
+```
+
+Edit `config.py` and set:
+- **EMAIL**: Your Marktplaats login email
+- **PASSWORD**: Your Marktplaats password
+- **CHROME_USER_DATA_DIR**: Path to Chrome profile (use separate automation profile recommended)
+- **BROWSER_COOKIES** (optional): For category scraper API access
+
+#### How to Get Browser Cookies (for scrape_categories.py)
+
+The category scraper needs browser cookies to access the Marktplaats API:
+
+1. Open Chrome and log in to Marktplaats
+2. Press `F12` to open DevTools
+3. Go to **Application** tab
+4. In the left sidebar, expand **Cookies** and click **https://www.marktplaats.nl**
+5. Look for the **Cookie** value (or copy individual cookies)
+6. Right-click on any cookie row > **Show Cookies** or manually copy all cookie values
+7. Format as: `cookie1=value1; cookie2=value2; cookie3=value3`
+8. Paste the entire string into `config.py` as `BROWSER_COOKIES`
+
+**Alternative method:**
+1. In DevTools, go to **Network** tab
+2. Refresh the page or navigate to any Marktplaats page
+3. Click on any request to marktplaats.nl
+4. In **Headers** section, find **Request Headers**
+5. Copy the entire **Cookie:** header value
+6. Paste into `config.py` as `BROWSER_COOKIES`
 
 ## Project Structure
 
 ```
 marktplaats-manager/
 ├── automation.py           # Main automation script
+├── requirements.txt        # Python dependencies
+├── config.example.py       # Example configuration file
+├── config.py              # Your configuration (create from example)
+├── .gitignore             # Git ignore file
 ├── README.md              # This file
+├── .venv/                 # Virtual environment (create this)
 ├── Example ad - HP Z600 workstation/
 │   ├── Beschrijving.txt   # Ad description
 │   ├── Categorie.txt      # Category and pricing info
-│   └── fotos/             # Product images
-└── advertenties/          # Folder for your ads (create this)
+│   └── photos/             # Product images
+└── ads/                   # Folder for your ads (create this)
     └── [Your Ad Name]/
         ├── Beschrijving.txt
         ├── Categorie.txt
-        └── fotos/
+        └── photos/
             ├── image1.jpg
             ├── image2.jpg
             └── ...
@@ -46,95 +108,144 @@ marktplaats-manager/
 
 ## Setup
 
-### 1. Configure Chrome Profile
+### 1. Activate Virtual Environment
 
-Edit the Chrome user data directory path in `automation.py`:
+Before running the script, make sure to activate your virtual environment:
 
-**For Linux:**
-```python
-ChromeOptions.add_argument("user-data-dir=/home/YOUR_USERNAME/.config/google-chrome")
+**Windows:**
+```bash
+.venv\Scripts\activate
 ```
 
-**For Windows:**
-```python
-ChromeOptions.add_argument("user-data-dir=C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Google\\Chrome\\User Data")
+**Linux/Mac:**
+```bash
+source .venv/bin/activate
 ```
 
-### 2. Add Login Credentials
+### 2. Create Configuration File
 
-In `automation.py`, add your Marktplaats credentials (lines 60-71):
+Copy the example configuration file and edit it with your settings:
 
-```python
-email = 'your_email@example.com'
-password = 'your_password'
+**Windows:**
+```bash
+copy config.example.py config.py
 ```
 
-### 3. Create Ad Folders
+**Linux/Mac:**
+```bash
+cp config.example.py config.py
+```
 
-Create a folder structure for each ad in the `advertenties/` directory:
+Then edit `config.py` and set:
+- `EMAIL`: Your Marktplaats email address
+- `PASSWORD`: Your Marktplaats password
+- `CHROME_USER_DATA_DIR`: Path to Chrome profile directory
+  - **Option 1** (existing profile): `r'C:\Users\YOUR_USERNAME\AppData\Local\Google\Chrome\User Data'` - Requires closing Chrome
+  - **Option 2** (separate profile - recommended): `r'C:\git\marktplaats\chrome-profile'` - No need to close Chrome
+- `HEADLESS_MODE`: Set to `True` to run without visible browser (optional)
+
+### 4. Create Ad Folders
+
+Create a folder structure for each ad in the `ads/` directory:
 
 ```
-advertenties/
+ads/
 └── My Product Name/
-    ├── Beschrijving.txt
-    ├── Categorie.txt
-    └── fotos/
+    ├── index.txt          # Category + description combined
+    └── photos/
         ├── photo1.jpg
         ├── photo2.jpg
         └── photo3.jpg
 ```
 
+#### Quick Workflow with AI Assistant
+
+**💡 Tip:** If you're using GitHub Copilot or similar AI assistant:
+
+1. Take photos of your book (cover, back, any metadata/notes)
+2. Drag the photos into the AI chat
+3. Simply ask: **"create an ad"**
+4. The AI will create the ad folder and `index.txt` automatically
+5. Move your photos to the generated `photos/` folder
+6. Run `python automation.py` to post!
+
+This workflow is especially efficient for books where you can photograph weight/dimensions notes alongside the book itself.
+
 ## Ad Configuration
 
-### Beschrijving.txt (Description)
+### index.txt (Required)
 
-Contains the full ad description text. Example:
+Each ad requires an `index.txt` file with category information on the first line, followed by a separator line `---` (with newlines before and after), then the description:
 
+**Format:**
 ```
-HP Z600 Workstation (WD059AV) hexa core
-
-Asking price: 400 euros
-
-Works with Hackintosh, Linux and Windows.
-
-Specifications:
-- 2x Intel Xeon X5670 @ 2.93GHz (24 cores total)
-- 96GB DDR3 ECC RAM
-- ...
-
-Pickup or shipping available.
+Category1--Category2--Category3--Subject--Year--Condition--PriceType--Price--PackageSize
+---
+Description text goes here...
 ```
 
-### Categorie.txt (Category)
-
-Format (double-dash separated):
-```
-Category1--Category2--Category3--Condition--PriceType--Price--ShippingOption--
-```
+**Important:** The `---` separator must be on its own line (with newlines before and after) to avoid confusion with empty fields in the category line (which use `--`).
 
 Example:
 ```
-Computers en Software--Computeronderdelen--Computerbehuizingen--Gebruikt--Vraagprijs--400,00--Zwaar--
+Boeken--Kunst en Cultuur--Beeldend--Beeldhouwkunst--1997--Gelezen--Bieden----Klein pakket
+---
+Camille Claudel - een vrouw
+Door Anne Delbée
+Uitgeverij: De Geus
+
+Biografie over Camille Claudel, de getalenteerde maar vergeten beeldhouwster en kunstenares uit de late 19e eeuw. Dit boek vertelt het aangrijpende verhaal van haar leven, haar relatie met Auguste Rodin, en haar artistieke strijd in een door mannen gedomineerde kunstwereld.
+
+Conditie: Gebruikt, in goede staat
+
+Ophalen of verzenden mogelijk. Bied wat het boek voor jou waard is!
+```
+
+### Category Format
+
+Format (double-dash separated):
+```
+Category1--Category2--Category3--Subject--Year--Condition--PriceType--Price--PackageSize
+```
+
+Example for Books:
+```
+Boeken--Kunst en Cultuur--Beeldend--Beeldhouwkunst--1997--Gelezen--Bieden----Klein pakket
+```
+
+Example for Computers:
+```
+Computers en Software--Computeronderdelen--Computerbehuizingen------Gebruikt--Vraagprijs--400,00--Gemiddeld pakket
 ```
 
 **Field Descriptions:**
 
-| Field | Description | Example Values |
-|-------|-------------|----------------|
-| Category1 | Main category | Computers en Software |
-| Category2 | Subcategory | Computeronderdelen |
-| Category3 | Sub-subcategory | Computerbehuizingen |
-| Condition | Item condition | Nieuw, Gebruikt |
-| PriceType | Pricing method | Vraagprijs, Bieden |
-| Price | Price amount | 400,00 |
-| ShippingOption | Shipping size | Klein, Licht, Groot, Zwaar |
+| Field | Description | Example Values | Notes |
+|-------|-------------|----------------|-------|
+| Category1 | Parent category | Boeken, Computers en Software | Required |
+| Category2 | Child category | Kunst en Cultuur, Computeronderdelen | Required |
+| Category3 | Grandchild category | Beeldend, Computerbehuizingen | Required |
+| Subject | Category-specific subject | Beeldhouwkunst, Schilder- en Tekenkunst | Optional (books only) |
+| Year | Publication/manufacture year | 1997, 2023 | Optional |
+| Condition | Item condition | Gelezen, Nieuw, Gebruikt, Zo goed als nieuw | Optional |
+| PriceType | Pricing method | Bieden, Vraagprijs, Gratis | Required |
+| Price | Price amount | 400,00 (leave empty for Bieden) | Optional |
+| PackageSize | Shipping package size | Klein pakket, Brievenbuspakje, Gemiddeld pakket, Groot pakket | Required for shipping |
 
-**Shipping Options:**
+**Package Size Options:**
 
-- **Klein** (Small): Fits in mailbox, 100-350g
-- **Licht** (Light): Fits in mailbox, 0-2kg
-- **Groot** (Large): Doesn't fit in mailbox, 0-10kg
-- **Zwaar** (Heavy): Doesn't fit in mailbox, 10-23kg
+- **Brievenbuspakje**: 0-2kg (fits in mailbox)
+- **Klein pakket**: 0-3kg
+- **Gemiddeld pakket**: 0-10kg
+- **Groot pakket**: 10-23kg
+
+**Book-Specific Subjects:**
+
+When Category3 is a book category, you can specify a subject:
+- Beeldhouwkunst
+- Grafische vormgeving
+- Schilder- en Tekenkunst
+- Overige onderwerpen
 
 ## Usage
 
@@ -170,12 +281,7 @@ The script automatically handles image orientation using EXIF data:
 
 ### Headless Mode
 
-To run without opening a browser window, uncomment in `automation.py`:
-
-```python
-ChromeOptions.add_argument("--headless")
-ChromeOptions.add_argument("--window-size=1920,1080")
-```
+To run without opening a browser window, set `HEADLESS_MODE = True` in your `config.py` file.
 
 ### Scheduling
 
@@ -195,6 +301,12 @@ Trigger: Daily at 9:00 AM
 
 ## Troubleshooting
 
+### Chrome Not Reachable / Session Not Created
+- **Close ALL Chrome windows** before running the script
+- Chrome's user data directory can only be used by one instance at a time
+- Check Task Manager (Windows) / Activity Monitor (Mac) for lingering Chrome processes
+- If Chrome is still running in the background, end the process and try again
+
 ### Login Issues
 - Ensure your Chrome profile path is correct
 - Check that credentials are properly set
@@ -202,7 +314,7 @@ Trigger: Daily at 9:00 AM
 
 ### Photo Upload Failures
 - Check image file formats (JPG, PNG supported)
-- Ensure photos are in the `fotos/` subfolder
+- Ensure photos are in the `photos/` subfolder
 - Verify file permissions
 
 ### Category Selection Errors
