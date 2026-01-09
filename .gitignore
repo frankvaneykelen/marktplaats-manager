@@ -22,5 +22,7 @@ config.py
 .DS_Store
 Thumbs.db
 
-advertenties/
+ads/
 chrome-profile/
+temp/
+ads-sold/

@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image, ExifTags
+import json
 
 # Import configuration
 try:
@@ -15,6 +16,52 @@ except ImportError:
     print("Error: config.py not found!")
     print("Please copy config.example.py to config.py and fill in your settings.")
     exit(1)
+
+# Load category data
+def load_categories():
+    """Load category hierarchy from scraped JSON files"""
+    try:
+        with open('categories/parents.json', encoding='utf-8') as f:
+            parents = json.load(f)
+        with open('categories/children.json', encoding='utf-8') as f:
+            children = json.load(f)
+        with open('categories/grandchildren.json', encoding='utf-8') as f:
+            grandchildren = json.load(f)
+        return parents, children, grandchildren
+    except Exception as e:
+        print(f"Warning: Could not load category data: {e}")
+        print("Run 'python scrape_categories.py' first to generate category files.")
+        return None, None, None
+
+def find_category_ids(parent_name, child_name, grandchild_name):
+    """Find category IDs from names using scraped data"""
+    parents, children, grandchildren = load_categories()
+    
+    if not all([parents, children, grandchildren]):
+        return None, None, None
+    
+    # Find parent ID
+    parent = next((p for p in parents if p['name'] == parent_name), None)
+    if not parent:
+        print(f"Warning: Parent category '{parent_name}' not found")
+        return None, None, None
+    parent_id = parent['id']
+    
+    # Find child ID
+    child = next((c for c in children if c['name'] == child_name and c['parentId'] == parent_id), None)
+    if not child:
+        print(f"Warning: Child category '{child_name}' not found under '{parent_name}'")
+        return parent_id, None, None
+    child_id = child['id']
+    
+    # Find grandchild ID
+    grandchild = next((g for g in grandchildren if g['name'] == grandchild_name and g['parentId'] == child_id), None)
+    if not grandchild:
+        print(f"Warning: Grandchild category '{grandchild_name}' not found under '{child_name}'")
+        return parent_id, child_id, None
+    grandchild_id = grandchild['id']
+    
+    return parent_id, child_id, grandchild_id
 
 # Setup Chrome WebDriver
 ChromeOptions = webdriver.ChromeOptions()
@@ -51,18 +98,16 @@ try:
     # Wait for the iframe to appear
     iframe = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[title*='Consent']")))
     WebDriver.switch_to.frame(iframe)
-    print("Switched to consent iframe")
     
     # Now click the accept button inside the iframe
     accept_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accepteren') or contains(text(), 'Accept')]")))
     accept_button.click()
-    print("Cookie consent accepted")
     
     # Switch back to main content
     WebDriver.switch_to.default_content()
     time.sleep(3)
-except Exception as e:
-    print(f"No cookie consent found or already accepted: {e}")
+except Exception:
+    # Cookie consent already accepted or not present
     WebDriver.switch_to.default_content()
 
 # Wait for any overlays to disappear
@@ -82,10 +127,9 @@ if check_exists_by_xpath(naam_zwm) != True and check_exists_by_xpath(naam_mwm) !
         # Use JavaScript click to avoid interception
         inloggen_header = WebDriver.find_element(By.XPATH, '//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2]/li[4]/a')
         WebDriver.execute_script("arguments[0].click();", inloggen_header)
-        print("Login button clicked")
         time.sleep(5)
-    except Exception as e:
-        print(f"Could not click login button: {e}")
+    except Exception:
+        pass
         time.sleep(2)
 
     # Wait for login form to appear
@@ -95,29 +139,26 @@ if check_exists_by_xpath(naam_zwm) != True and check_exists_by_xpath(naam_mwm) !
         
         form_email.clear()
         form_email.send_keys(email)
-        print("Email entered")
         time.sleep(2)
 
         form_password = WebDriver.find_element(By.ID, 'password')
         form_password.clear()
         form_password.send_keys(password)
-        print("Password entered")
         time.sleep(2)    
 
         # Find and click the login button
         try:
             inloggen_submit = WebDriver.find_element(By.XPATH, "//button[contains(text(), 'Inloggen met je e-mailadres')]")
             inloggen_submit.click()
-            print("Login submitted")
             time.sleep(5)
         except:
             # Alternative: press Enter on password field
             form_password.send_keys('\n')
-            print("Login submitted via Enter key")
             time.sleep(5)
         
-    except Exception as e:
-        print(f"Login form not found or already logged in: {e}")
+    except Exception:
+        # Already logged in
+        pass
 
 # Wait for login to complete and page to load
 time.sleep(3)
@@ -137,7 +178,7 @@ elif check_exists_by_xpath('//*[@id="header-root"]/header/div[1]/div[2]/div/ul[2
     mijn_advertenties.click()
     time.sleep(2)
 else:
-    print("Could not find account dropdown - might not be logged in")
+    print("ERROR: Not logged in")
     WebDriver.close()
     exit(1)
 
@@ -149,33 +190,33 @@ while check_exists_by_xpath(meer_advertenties) != False:
     toon_meer_advertenties.click()
     time.sleep(3)
 
-my_list = os.listdir('advertenties')
+my_list = [d for d in os.listdir('ads') if os.path.isdir(os.path.join('ads', d))]
+print(f"Found {len(my_list)} ad folders locally")
 
-advertentie_naam_div = WebDriver.find_elements(By.XPATH, '//*[@class="row ad-listing"]/div/div[3]/div[1]')
-print(len(advertentie_naam_div))
+# Get existing ads from Marktplaats using flexible selector
+advertentie_naam_div = WebDriver.find_elements(By.XPATH, '//*[contains(@class, "ad-listing")]//div[@class="description-title"]')
 
 advertentie_online_list = []
 
 for i in advertentie_naam_div:
+    try:
+        advertenties_op_marktplaats = i.find_element(By.TAG_NAME, 'span').text
+        advertentie_online_list.append(advertenties_op_marktplaats)
+    except:
+        continue
 
-    advertenties_op_marktplaats = i.find_element(By.TAG_NAME, 'span').text
-    advertentie_online_list.append(advertenties_op_marktplaats)
+print(f"Found {len(advertentie_online_list)} ads online, {len(my_list)} ads locally")
 
-print(len(advertentie_online_list))
+ads_niet_op_marktplaats = [i for i in my_list if i not in advertentie_online_list]
 
-advertenties_niet_op_marktplaats = []
-
-for i in my_list:
-
-    if i not in advertentie_online_list:
-
-        advertenties_niet_op_marktplaats.append(i)
-        print(i)
-        
-print(len(advertenties_niet_op_marktplaats))
+if ads_niet_op_marktplaats:
+    print(f"Posting {len(ads_niet_op_marktplaats)} new ads: {', '.join(ads_niet_op_marktplaats)}")
+else:
+    print("All ads already online")
 
 
-for i in advertenties_niet_op_marktplaats:
+for i in ads_niet_op_marktplaats:
+    print(f"\nProcessing: {i}")
 
     homepage = WebDriver.find_element(By.XPATH, '/html/body/mp-header/div[1]/div[2]/div/a')
     homepage.click()
@@ -195,34 +236,61 @@ for i in advertenties_niet_op_marktplaats:
     wait = WebDriverWait(WebDriver, 10)
     input_advertentienaam = wait.until(EC.presence_of_element_located((By.ID, 'TextField-vulEenTitelIn')))
     input_advertentienaam.send_keys(i)
-    print(f"Ad title entered: {i}")
     time.sleep(2)
 
-    f = open(f'advertenties/{i}/Categorie.txt', 'r')
-    file_contents = f.read()
-    file_contents = file_contents.split("--")
+    # Read index.txt and split category line from description
+    with open(f'ads/{i}/index.txt', 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    parts = content.split('\n---\n', 1)
+    category_line = parts[0].strip()
+    beschrijving_text = parts[1].strip() if len(parts) > 1 else ""
+    
+    # Parse category fields
+    file_contents = category_line.split("--")
+    
+    # Look up category IDs from scraped data
+    parent_id, child_id, grandchild_id = find_category_ids(file_contents[0], file_contents[1], file_contents[2])
+    
+    if parent_id:
+        eerste_select = Select(WebDriver.find_element(By.ID, 'cat_sel_1'))
+        eerste_select.select_by_value(str(parent_id))
+        print(f"Category 1 selected: {file_contents[0]} (ID: {parent_id})")
+        time.sleep(2)
+    else:
+        print(f"ERROR: Could not find parent category '{file_contents[0]}'")
+        continue
 
-    eerste_select = Select(WebDriver.find_element(By.ID, 'cat_sel_1'))
-    eerste_select.select_by_visible_text(file_contents[0])
-    print(f"Category 1 selected: {file_contents[0]}")
-    time.sleep(2)
+    if child_id:
+        tweede_select = Select(WebDriver.find_element(By.ID, 'cat_sel_2'))
+        tweede_select.select_by_value(str(child_id))
+        print(f"Category 2 selected: {file_contents[1]} (ID: {child_id})")
+        time.sleep(2)
+    else:
+        print(f"ERROR: Could not find child category '{file_contents[1]}'")
+        continue
 
-    tweede_select = Select(WebDriver.find_element(By.ID, 'cat_sel_2'))
-    tweede_select.select_by_visible_text(file_contents[1])
-    print(f"Category 2 selected: {file_contents[1]}")
-    time.sleep(2)
+    if grandchild_id:
+        derde_select = Select(WebDriver.find_element(By.ID, 'cat_sel_3'))
+        derde_select.select_by_value(str(grandchild_id))
+        print(f"Category 3 selected: {file_contents[2]} (ID: {grandchild_id})")
+        time.sleep(2)
+    else:
+        print(f"ERROR: Could not find grandchild category '{file_contents[2]}'")
+        continue
 
-    derde_select = Select(WebDriver.find_element(By.ID, 'cat_sel_3'))
-    derde_select.select_by_visible_text(file_contents[2])
-    print(f"Category 3 selected: {file_contents[2]}")
-    time.sleep(2)
+    # Find and click submit button
+    try:
+        wait = WebDriverWait(WebDriver, 10)
+        submit_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="redirectToPlaceAd"]')))
+        submit_button.click()
+        time.sleep(5)
+    except Exception as e:
+        print(f"ERROR: Could not find submit button: {e}")
+        continue
 
-    submit_advertentienaam = WebDriver.find_element(By.XPATH, '//*[@id="category-selection-submit"]')
-    submit_advertentienaam.click()
-    time.sleep(5)
-
-    beschrijving_path = f'advertenties/{i}/Beschrijving.txt' 
-    photos_folder = f'advertenties/{i}/fotos'
+    # Description already loaded from index.txt
+    photos_folder = f'ads/{i}/photos'
     my_photos = os.listdir(photos_folder)
     upload_vak = 0
 
@@ -264,124 +332,124 @@ for i in advertenties_niet_op_marktplaats:
                 # cases: image don't have getexif
                 pass
 
-        while True:
-            foto_upload_div = WebDriver.find_elements(By.XPATH, '//*[@class="moxie-shim moxie-shim-html5"]')
-            try:
-                foto_upload = foto_upload_div[upload_vak].find_element(By.TAG_NAME, 'input')
-            except IndexError:
-                time.sleep(1)
-                continue
-            else:
-       		       
-                path = f'{os.getcwd()}/{photos_folder}/{newphoto}'
-                foto_upload.send_keys(path)
-                upload_vak+=1
-                break
+        # Upload photo using the file input
+        try:
+            wait = WebDriverWait(WebDriver, 10)
+            file_input = wait.until(EC.presence_of_element_located((By.ID, 'imageUploader-hiddenInput')))
+            path = f'{os.getcwd()}/{photos_folder}/{newphoto}'
+            file_input.send_keys(path)
+            print(f"Photo uploaded: {newphoto}")
+            time.sleep(2)  # Wait for upload to process
+        except Exception as e:
+            print(f"ERROR: Could not upload photo {newphoto}: {e}")
+            continue
+    
+    time.sleep(2)
+
+    # Fill in description using new rich text editor (from index.txt)
+    try:
+        wait = WebDriverWait(WebDriver, 10)
+        description_field = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="text-editor-input_nl-NL"]')))
+        description_field.send_keys(beschrijving_text)
+        time.sleep(2)
+    except Exception as e:
+        print(f"ERROR: Could not fill description: {e}")
+        continue
+
+    # Format: Parent--Child--Grandchild--Subject--Year--Condition--PriceType--Price--PackageSize
+    # Example: Boeken--Kunst en Cultuur--Beeldend--Beeldhouwkunst--1997--Gelezen--Bieden----Klein pakket
+    
+    # Subject (if exists - field 3 for books)
+    if len(file_contents) > 3 and file_contents[3]:
+        try:
+            subject_select = Select(WebDriver.find_element(By.ID, 'singleSelectAttribute[subject]'))
+            subject_select.select_by_visible_text(file_contents[3])
+            print(f"Subject selected: {file_contents[3]}")
+            time.sleep(1)
+        except:
+            print(f"Subject field not found or couldn't select '{file_contents[3]}'")
+    
+    # Year (if exists - field 4)
+    if len(file_contents) > 4 and file_contents[4]:
+        try:
+            year_input = WebDriver.find_element(By.ID, 'numericAttribute[yearOriginal]')
+            year_input.send_keys(file_contents[4])
+            time.sleep(1)
+        except:
+            pass
+    
+    # Condition (if exists - field 5)
+    if len(file_contents) > 5 and file_contents[5]:
+        try:
+            condition_select = Select(WebDriver.find_element(By.ID, 'singleSelectAttribute[condition]'))
+            condition_select.select_by_visible_text(file_contents[5])
+            time.sleep(1)
+        except:
+            pass
+
+    # Price type (field 6)
+    if len(file_contents) > 6 and file_contents[6]:
+        try:
+            price_type_select = Select(WebDriver.find_element(By.ID, 'Dropdown-prijstype'))
+            price_type_select.select_by_visible_text(file_contents[6])
+            time.sleep(1)
+        except:
+            pass
+
+    # Delivery method - Ophalen of Verzenden should already be selected
+    # Carriers - Leave as default (PostNL and DHL checked)
     time.sleep(1)
 
-    beschrijving = open(beschrijving_path, 'r')
-    beschrijving_text = beschrijving.read()
-    textvak_beschrijving_frame = WebDriver.find_element(By.XPATH, '//*[@id="description_nl-NL_ifr"]')
-    WebDriver.switch_to.frame(textvak_beschrijving_frame)
-    textvak_beschrijving = WebDriver.find_element(By.XPATH, "//body")
-    textvak_beschrijving.send_keys(beschrijving_text)
-    time.sleep(2)
+    # Package size (if specified - field 8)
+    if len(file_contents) > 8 and file_contents[8]:
+        package_size_map = {
+            'Brievenbuspakje': 'Radio-brievenbuspakje-xs',
+            'Klein pakket': 'Radio-kleinPakket-s',
+            'Gemiddeld pakket': 'Radio-gemiddeldPakket-m',
+            'Groot pakket': 'Radio-grootPakket-l'
+        }
+        if file_contents[8] in package_size_map:
+            try:
+                package_radio = WebDriver.find_element(By.ID, package_size_map[file_contents[8]])
+                package_radio.click()
+                print(f"Package size selected: {file_contents[8]}")
+                time.sleep(1)
+            except:
+                print(f"Could not select package size '{file_contents[8]}'")
 
-    WebDriver.switch_to.default_content()
-    if check_exists_by_xpath('//*[@id="syi-attribute-condition"]/div/select') != False:
-        conditie_select = Select(WebDriver.find_element(By.XPATH, '//*[@id="syi-attribute-condition"]/div/select'))
-        conditie_select.select_by_visible_text(file_contents[3])
-        time.sleep(2)
-
-    prijstype_select = Select(WebDriver.find_element(By.XPATH, '//*[@id="syi-price-type-dropdown"]/div/select'))
-    prijstype_select.select_by_visible_text(file_contents[4])
-    time.sleep(2)
-
-    if file_contents[4] == 'Vraagprijs':
-        vraagprijs = WebDriver.find_element(By.XPATH, '//*[@id="syi-bidding-price"]/input')
-        vraagprijs.send_keys(file_contents[5])
-        time.sleep(3)
-
-        bieden = WebDriver.find_element(By.XPATH, '//*[@id="syi-bidding-accept"]/span/label')
-        biedprijs = WebDriver.find_element(By.XPATH, '//*[@id="syi-price-type"]/div[1]/div[2]/div[2]')
-        biedprijs_stijl = biedprijs.get_attribute("style")
-        print(biedprijs_stijl)
-        if biedprijs_stijl == 'display: none;':
-            bieden.click()
+    # Deselect phone number display
+    try:
+        phone_switch = WebDriver.find_element(By.ID, 'syi-phonenumber-switch-input')
+        if phone_switch.is_selected():
+            phone_switch.click()
+            print("Phone number display disabled")
         time.sleep(1)
+    except:
+        print("Could not find phone number switch")
 
-    verzendmethode = WebDriver.find_element(By.XPATH, '//*[@id="shippingMethod0"]')
-    verzendmethode.click()
-    time.sleep(2)
-
-    if file_contents[5] == 'Klein' or file_contents[6] == 'Klein':
-        past_door_bus = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[2]/div/div/div[2]/label[1]/input')
-        past_door_bus.click()
+    # Select "Gratis" ad type
+    try:
+        wait = WebDriverWait(WebDriver, 10)
+        gratis_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="bundle-option-FREE"]')))
+        gratis_button.click()
+        print("Gratis ad type selected")
         time.sleep(2)
+    except Exception as e:
+        print(f"Could not select Gratis ad type: {e}")
 
-        envelop = WebDriver.find_element(By.XPATH, '//*[@id="1000_letters_175"]')
-        envelop.click()
-        time.sleep(2)
+    # Submit the ad
+    try:
+        wait = WebDriverWait(WebDriver, 10)
+        submit_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="place-listing-submit-button"]')))
+        submit_button.click()
+        print(f"✓ {i}")
+        time.sleep(5)
+    except Exception as e:
+        print(f"ERROR: Could not submit ad: {e}")
+        continue
 
-        verzendmethode_opslaan = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[3]/button[2]')
-        verzendmethode_opslaan.click()
-
-    elif file_contents[5] == 'Licht' or file_contents[6] == 'Licht':
-        past_door_bus = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[2]/div/div/div[2]/label[1]/input')
-        past_door_bus.click()
-        time.sleep(2)
-
-        brievenbuspakje = WebDriver.find_element(By.XPATH, '//*[@id="1018_parcels_1000"]')
-        brievenbuspakje.click()
-        time.sleep(2)
-
-        verzendmethode_opslaan = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[3]/button[2]')
-        verzendmethode_opslaan.click()
-
-    elif file_contents[5] == 'Groot' or file_contents[6] == 'Groot':
-        past_niet_door_bus = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[2]/div/div/div[2]/label[2]/input')
-        past_niet_door_bus.click()
-        time.sleep(2)
-
-        pakket_0_tot_10_kg = WebDriver.find_element(By.XPATH, '//*[@id="3000_parcels_5000"]')
-        pakket_0_tot_10_kg.click()
-        time.sleep(2)
-
-        verzendmethode_opslaan = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[3]/button[2]')
-        verzendmethode_opslaan.click()
-
-    elif file_contents[5] == 'Zwaar' or file_contents[6] == 'Zwaar':
-        past_niet_door_bus = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[2]/div/div/div[2]/label[2]/input')
-        past_niet_door_bus.click()
-        time.sleep(2)
-
-        pakket_10_tot_23_kg = WebDriver.find_element(By.XPATH, '//*[@id="3001_parcels_16500"]')
-        pakket_10_tot_23_kg.click()
-        time.sleep(2)
-
-        verzendmethode_opslaan = WebDriver.find_element(By.XPATH, '//*[@id="PostNLShippingProducts"]/div[1]/div[3]/button[2]')
-        verzendmethode_opslaan.click()
-
-    time.sleep(2)
-
-    kopersbescherming = WebDriver.find_element(By.XPATH, '//*[@id="syi-buyer-protection"]/div[2]/label')
-    kopersbescherming.click()
-    time.sleep(2)
-
-    gratis = WebDriver.find_element(By.XPATH, '//*[@id="js-products"]/div[1]/div/div/div[1]/div[1]/span')
-    gratis.click()
-    time.sleep(2)
-
-    plaatsen = WebDriver.find_element(By.XPATH, '//*[@id="syi-place-ad-button"]')
-    plaatsen.click()
-    time.sleep(5)
-  
-    feedback = '//*[@id="survey-web-page-wrapper"]/div/div[4]/button[1]'
-
-    if check_exists_by_xpath(feedback) != False:
-        feedback_sluit = WebDriver.find_element(By.XPATH, feedback)
-        feedback_sluit.click()
-        time.sleep(2)
-
-time.sleep(20)
+# Close browser
+time.sleep(5)
 WebDriver.close()
+print("\nDone!")
+
