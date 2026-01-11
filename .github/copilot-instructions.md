@@ -2,7 +2,16 @@
 
 ## Creating Ads - General Instructions
 
+Tip: Agent with GPT-4.1 works fine, no need for more expensive models.
+
+When the user provides a prompt in the format: **"create a [book/non-book] ad [length] [width] [height] [weight]"**
 These steps apply to ALL ads (books, non-books, etc.):
+
+The text of the ad may not contain URLs or domain names, becuase Marktplaats disallows them.
+
+> Gratis advertenties waarin kosteloos websites worden vermeld of wordt verwezen naar een website worden gedeactiveerd.
+
+> In uw advertentie of in de foto bij uw advertentie staat een dergelijke verwijzing. Om deze reden is uw advertentie gedeactiveerd.
 
 ### Common Step 1: Calculate Shipping Options
 
@@ -233,17 +242,7 @@ The index.txt file must follow this format:
 
 Only use the list in ../categories/categorieen.txt. **Do not invent or hallucinate new categories!**
 
-**Common Non-Book Categories:**
-- **Kleding | Dames**: Women's clothing, shoes, accessories
-- **Kleding | Heren**: Men's clothing, shoes, accessories
-- **Huis en Inrichting - Meubels**: Furniture
-- **Huis en Inrichting - Woondecoratie**: Home decor
-- **Computers en Software - Computers**: Desktops, laptops, monitors
-- **Computers en Software - Randapparatuur**: Keyboards, mice, cables
-- **Audio, Tv en Foto**: Electronics, cameras, audio equipment
-- **Antiek en Kunst**: Vintage items, collectibles
-- **Hobby en Vrije tijd - Sport en Fitness**: Sports equipment
-- **Verzamelen**: Collectibles, stamps, coins
+For cassette tapes use `Cd's en Dvd's--Overige--Cassettebandjes--`
 
 **Condition Options:**
 - Nieuw (new)
