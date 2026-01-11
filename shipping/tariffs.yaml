@@ -1,0 +1,185 @@
+PostNL:
+  Nederland:
+    Brief of kaart:
+      min. dimensions: 14 x 9 cm
+      max. dimensions: 32.4 x 22.9 cm
+      max. weight: 20 g
+      track & trace: no
+      price: €1.40
+    Brief groot formaat:
+      max. dimensions: 38.1 x 26.5 x 3.2 cm
+      max. weight: 2 kg
+      track & trace: no
+      price: €5.50
+    Brievenbuspakje:
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      max. weight: 2 kg
+      track & trace: yes
+      price: €4.40
+    Klein pakket:
+      max. dimensions: 34 x 28 x 15 cm
+      max. weight: 3 kg
+      track & trace: yes
+      price: €5.85
+    Gemiddeld pakket:
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 10 kg
+      track & trace: yes
+      price: €6.95
+    Groot pakket:
+      max. dimensions: 176 x 78 x 58 cm
+      max. weight: 23 kg
+      track & trace: yes
+      price: €16.95
+  België:
+    Klein pakket zonder track & trace:
+      max. dimensions: L + B + H = max. 90 cm, langste zijde = max. 60 cm
+      max. weight: 500 g
+      track & trace: no
+      price: €8.50
+    Klein pakket met track & trace:
+      max. dimensions: L + B + H = max. 90 cm, langste zijde = max. 60 cm
+      max. weight: 500 g
+      track & trace: yes
+      price: €9.50
+    Brievenbuspakje zonder track & trace:
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      max. weight: 500 g
+      track & trace: no
+      price: €8.50
+    Brievenbuspakje met track & trace:
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      max. weight: 500 g
+      track & trace: yes
+      price: €9.50
+    Gemiddeld pakket (max 2 kg):
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 2 kg
+      track & trace: yes
+      price: €12.25
+    Gemiddeld pakket (max 5 kg):
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 5 kg
+      track & trace: yes
+      price: €19.25
+    Gemiddeld pakket (max 10 kg):
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 10 kg
+      track & trace: yes
+      price: €24.75
+    Gemiddeld pakket (max 5 kg):
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 5 kg
+      track & trace: yes
+      price: €19.25
+    Gemiddeld pakket (max 20 kg):
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 20 kg
+      track & trace: yes
+      price: €34.25
+    Gemiddeld pakket (max 23 kg):
+      max. dimensions: 100 x 50 x 50 cm
+      max. weight: 23 kg
+      track & trace: yes
+      price: €46.00
+DHL:
+  Nederland:
+    Envelop naar ServicePoint:
+      min. weight: 50 g
+      max. weight: 500 g
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      track & trace: yes
+      price: €3.70
+    Envelop naar huisadres:
+      min. weight: 50 g
+      max. weight: 500 g
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      track & trace: yes
+      price: €4.20
+    Brievenbuspakket naar ServicePoint:
+      max. weight: 2 kg
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      track & trace: yes
+      price: €3.85
+    Brievenbuspakket naar huisadres:
+      max. weight: 2 kg
+      max. dimensions: 38 x 26.5 x 3.2 cm
+      track & trace: yes
+      price: €4.35
+    Pakket naar ServicePoint (max 5 kg):
+      max. weight: 5 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €5.95
+    Pakket naar huisadres (max 5 kg):
+      max. weight: 5 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €6.45
+    Pakket naar ServicePoint (max 10 kg):
+      max. weight: 10 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €6.20
+    Pakket naar huisadres (max 10 kg):
+      max. weight: 10 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €6.70
+    Pakket naar ServicePoint (max 20 kg):
+      max. weight: 20 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €14.95
+    Pakket naar huisadres (max 20 kg):
+      max. weight: 20 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €15.45
+    Extra opties:
+      Pakketlabel laten aanmaken bij DHL ServicePoint: +€1.10
+      Pakket niet bij de buren bezorgen: +€0.95
+      Verzekering tot €500 voor Nederland en België: +€2.50
+      Verzekering tot €500 voor Europa: +€3.50
+  België:
+    Pakket naar ServicePoint (max 2 kg):
+      max. weight: 2 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €10.75
+    Pakket naar huisadres (max 2 kg):
+      max. weight: 2 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €11.75
+    Pakket naar ServicePoint (max 5 kg):
+      max. weight: 5 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €17.00
+    Pakket naar huisadres (max 5 kg):
+      max. weight: 5 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €18.00
+    Pakket naar ServicePoint (max 10 kg):
+      max. weight: 10 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €22.00
+    Pakket naar huisadres (max 10 kg):
+      max. weight: 10 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €23.00
+    Pakket naar ServicePoint (max 20 kg):
+      max. weight: 20 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €31.00
+    Pakket naar huisadres (max 20 kg):
+      max. weight: 20 kg
+      max. dimensions: 80 x 50 x 35 cm
+      track & trace: yes
+      price: €32.00
+  

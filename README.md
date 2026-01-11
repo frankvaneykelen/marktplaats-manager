@@ -164,7 +164,7 @@ ads/
 
 1. Take photos of your book (cover, back, any metadata/notes)
 2. Drag the photos into the AI chat
-3. Simply ask: **"create an ad"**
+3. Simply ask: **"create an ad 19.6 13 1.3 170"** (where the numbers correspond to the height, width, thickness in cm, and weight in grams)
 4. The AI will create the ad folder and `index.txt` automatically
 5. Move your photos to the generated `photos/` folder
 6. Run `python automation.py` to post!
@@ -241,7 +241,7 @@ Computers en Software--Computeronderdelen--Computerbehuizingen------Gebruikt--Vr
 
 **Book-Specific Subjects:**
 
-When Category3 is a book category, you can specify a subject:
+When Category3 is "Beeldend", you can specify a subject ("Onderwerp") on the ad edit page:
 - Beeldhouwkunst
 - Grafische vormgeving
 - Schilder- en Tekenkunst
