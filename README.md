@@ -247,6 +247,28 @@ When Category3 is "Beeldend", you can specify a subject ("Onderwerp") on the ad 
 - Schilder- en Tekenkunst
 - Overige onderwerpen
 
+
+## How Selenium is Used in This Project
+
+This project uses [Selenium](https://www.selenium.dev/) to automate browser actions for posting and managing ads on Marktplaats.nl. Selenium allows the script to control Google Chrome just like a human would, but fully automated from Python code.
+
+### What Selenium Does in `automation.py`
+
+1. **Browser Setup**: The script configures and launches a Chrome browser using Selenium's `webdriver.Chrome`, with options for user profile, headless mode, and more.
+2. **Login Automation**: It navigates to Marktplaats.nl, handles cookie consent popups, and logs in using your credentials from `config.py`.
+3. **Navigation**: Selenium is used to click through the Marktplaats interface, open your ad overview, and find which ads are already online.
+4. **Ad Posting**: For each new ad (found in your `ads/` folder but not online), Selenium:
+  - Navigates to the ad posting page
+  - Fills in the ad title, selects the correct category using dropdowns, and uploads photos
+  - Fills in the ad description and other fields (year, condition, price type, etc.)
+  - Selects delivery and package options
+  - Submits the ad
+5. **Element Interaction**: The script uses Selenium's `find_element` and `find_elements` to locate page elements by XPath, CSS selectors, or IDs, and interacts with them (click, send_keys, select dropdowns) to mimic user actions.
+6. **Waiting and Error Handling**: It uses `WebDriverWait` and `expected_conditions` to wait for elements to appear or become clickable, and handles exceptions if elements are not found or actions fail.
+
+**Summary:** Selenium acts as a browser robot: it opens Chrome, logs in, navigates, fills forms, uploads files, and clicks buttons—just like a human, but fully automated from a Python script. This is useful for automating repetitive web tasks that don’t have an API.
+
+---
 ## Usage
 
 Run the automation script:
