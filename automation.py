@@ -1,4 +1,6 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.common.exceptions import NoSuchElementException   
 import os
@@ -76,7 +78,7 @@ ChromeOptions.add_argument("--remote-debugging-port=9222")  # Enable DevTools
 if HEADLESS_MODE:
     ChromeOptions.add_argument("--headless")
     ChromeOptions.add_argument(f"--window-size={WINDOW_SIZE}")
-WebDriver = webdriver.Chrome(options = ChromeOptions)
+WebDriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options = ChromeOptions)
 time.sleep(2)
 
 def check_exists_by_xpath(xpath):
